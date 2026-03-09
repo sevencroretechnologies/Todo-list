@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { getTasks, createTask, updateTask, deleteTask, toggleTask } from '../api/taskApi';
 import TaskTable from '../components/TaskTable';
@@ -12,6 +12,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState({
     status: '',
     priority: '',
@@ -21,6 +22,20 @@ const Dashboard = () => {
     per_page: 10,
     page: 1,
   });
+  const isInitialMount = useRef(true);
+
+  // Debounce search input
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      setDebouncedSearch(filters.search);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDebouncedSearch(filters.search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [filters.search]);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -28,7 +43,7 @@ const Dashboard = () => {
       const params = {};
       if (filters.status) params.status = filters.status;
       if (filters.priority) params.priority = filters.priority;
-      if (filters.search) params.search = filters.search;
+      if (debouncedSearch) params.search = debouncedSearch;
       params.sort_by = filters.sort_by;
       params.sort_order = filters.sort_order;
       params.per_page = filters.per_page;
@@ -42,19 +57,11 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters.status, filters.priority, filters.sort_by, filters.sort_order, filters.per_page, filters.page, debouncedSearch]);
 
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchTasks();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [filters.search, fetchTasks]);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
