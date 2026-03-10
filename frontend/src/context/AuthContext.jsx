@@ -41,9 +41,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (data) => {
     const res = await registerApi(data);
-    localStorage.setItem('token', res.data.token);
-    setUser(res.data.user);
-    toast.success('Registration successful!');
+    toast.success('Registration successful! Please log in.');
     return res;
   };
 

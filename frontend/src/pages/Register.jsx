@@ -27,7 +27,7 @@ const Register = () => {
     setLoading(true);
     try {
       await register(formData);
-      navigate('/');
+      navigate('/login');
     } catch (err) {
       const errors = err.response?.data?.errors;
       if (errors) {
